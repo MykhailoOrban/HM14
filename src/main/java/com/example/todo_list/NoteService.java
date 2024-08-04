@@ -1,50 +1,38 @@
 package com.example.todo_list;
 
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class NoteService {
 
-    private final List<Note> notes = new ArrayList<>();
-    private long nextId = 1;
+    @Autowired
+    private NoteRepository noteRepository;
 
     public List<Note> listAll() {
-        return new ArrayList<>(notes);
+        return noteRepository.findAll();
     }
 
     public Note add(Note note) {
-        note.setId(nextId++);
-        notes.add(note);
-        return note;
+        return noteRepository.save(note);
     }
 
     public void deleteById(long id) {
-        notes.removeIf(note -> note.getId() == id);
+        noteRepository.deleteById(id);
     }
 
     public void update(Note note) {
-        Optional<Note> existingNote = notes.stream()
-                .filter(n -> n.getId().equals(note.getId()))
-                .findFirst();
-
-        if (existingNote.isPresent()) {
-            Note n = existingNote.get();
-            n.setTitle(note.getTitle());
-            n.setContent(note.getContent());
-        } else {
-            throw new IllegalArgumentException("Note not found");
-        }
+        Note existingNote = noteRepository.findById(note.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Note not found"));
+        existingNote.setTitle(note.getTitle());
+        existingNote.setContent(note.getContent());
+        noteRepository.save(existingNote);
     }
 
     public Note getById(long id) {
-        return notes.stream()
-                .filter(note -> note.getId() == id)
-                .findFirst()
+        return noteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Note not found"));
     }
 }
